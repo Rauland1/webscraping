@@ -80,13 +80,14 @@ try:
         # Address
         address = driver.find_element_by_class_name("brMTW").text
         address = address.split(",")
+
         for a in address:
             rest_data.append(a)
         print("Address FOUND!")
 
         # Coords
-        rest_data.append("")
-        rest_data.append("")
+        rest_data.append(" ")
+        rest_data.append(" ")
 
         try:
             # Open all details modal
@@ -108,6 +109,9 @@ try:
                 )
                 print("Tags FOUND!")
             except:
+                # Empty desc
+                rest_data.append(" ")
+
                 # Tags
                 get_tags(
                     '//*[@id="BODY_BLOCK_JQUERY_REFLOW"]/div[15]/div/div[2]/div/div/div[1]/div/div/div/div[1]/div[2]'
@@ -116,7 +120,7 @@ try:
                 print("Tags FOUND!")
         except:
             # Empty desc
-            rest_data.append("")
+            rest_data.append(" ")
 
             # Tags
             get_tags('//*[@id="component_43"]/div/div/div/div[2]/div/div[2]/div/div[2]')
