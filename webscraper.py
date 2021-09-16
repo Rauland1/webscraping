@@ -37,11 +37,14 @@ def write_to_csv(data):
 
 
 def get_tags(xpath):
-    tags = driver.find_element(By.XPATH, xpath).text
-    tags = tags.replace(" ", "").split(",")
-    print(f"Tags: {tags}")
-    for tag in tags:
-        rest_data.append(tag)
+    try:
+        tags = driver.find_element(By.XPATH, xpath)
+        tags = tags.replace(" ", "").split(",")
+        print(f"Tags: {tags}")
+        for tag in tags:
+            rest_data.append(tag)
+    except Exception:
+        return
 
 
 def get_element(method, str):
@@ -130,12 +133,14 @@ try:
                     '//*[@id="BODY_BLOCK_JQUERY_REFLOW"]/div[15]/div/div[2]/div/div/div[1]/div/div/div/div[2]/div[2]'
                 )
         else:
+            # Description outside
             desc = get_element(By.CLASS_NAME, "epsEZ")
             if desc:
                 rest_data.append(desc.text)
             else:
                 print("No description")
                 rest_data.append("No description")
+            # Get tags anyway
             get_tags(
                 '//*[@id="component_43"]/div/div/div/div[2]/div/div[3]/div[1]/div[2]'
             )
