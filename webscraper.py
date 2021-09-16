@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+import re
 import time
 import csv
 from geopy.geocoders import Nominatim
@@ -10,7 +11,12 @@ from geopy.geocoders import Nominatim
 # SETUP
 PATH = "chromedriver.exe"
 driver = webdriver.Chrome(PATH)
-URL = "https://www.tripadvisor.com/Restaurants-g298477-Targu_Mures_Mures_County_Central_Romania_Transylvania.html"
+
+# Targu Mures
+# URL = "https://www.tripadvisor.com/Restaurants-g298477-Targu_Mures_Mures_County_Central_Romania_Transylvania.html"
+
+# Bristol
+URL = "https://www.tripadvisor.com/Restaurants-g186220-Bristol_England.html"
 
 driver.get(URL)
 
@@ -49,6 +55,25 @@ def get_element(method, str):
     return element
 
 
+def parse_address(address):
+    postcode_pattern = "([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})"
+    print(address)
+    address = address.split(",")
+    print(address)
+    r = re.compile(postcode_pattern)
+    postcode = r.match(address[1])
+
+    # Coordinates
+    location = geolocator.geocode(f"{address[0]} {postcode}")
+    if location:
+        print(f"Coordinates: {location.latitude}, {location.longitude}")
+        rest_data.append(location.latitude)
+        rest_data.append(location.longitude)
+    else:
+        rest_data.append(0.001)
+        rest_data.append(0.001)
+
+
 # Main
 try:
     # Get rid of privacy modal
@@ -67,11 +92,10 @@ try:
     for name in restaurant_names:
         # Open restaurant page
         link = get_element(By.LINK_TEXT, name).click()
-        time.sleep(5)
+        time.sleep(2)
 
         # Switch focus to opened tab
         driver.switch_to.window(driver.window_handles[1])
-        time.sleep(1)
 
         # Hold restaurant data
         rest_data = []
@@ -83,29 +107,17 @@ try:
 
         # Address
         address = driver.find_element(By.CLASS_NAME, "brMTW").text
-        print(f"Address: {address}")
-        address = address.split(",")
-        for a in address:
-            a = a.strip()
-            rest_data.append(a)
-
-        # Coordinates
-        location = geolocator.geocode(f"{address[0]} Targu Mures")
-        if location:
-            print(f"Coordinates: {location.latitude}, {location.longitude}")
-            rest_data.append(location.latitude)
-            rest_data.append(location.longitude)
-        else:
-            rest_data.append(0.001)
-            rest_data.append(0.001)
+        if address:
+            parse_address(address)
 
         # Details
         details_modal = get_element(By.LINK_TEXT, "View all details")
-        time.sleep(1)
         if details_modal:
             details_modal.click()
-            desc = driver.find_element(By.CLASS_NAME, "OMpFN")
+            print("Clicked?")
+            desc = get_element(By.CLASS_NAME, "OMpFN")
             if desc:
+                print("Found desc?")
                 print(f"Description: {desc.text}")
                 rest_data.append(desc.text)
                 get_tags(
@@ -115,13 +127,17 @@ try:
                 print("No description")
                 rest_data.append("No description")
                 get_tags(
-                    '//*[@id="BODY_BLOCK_JQUERY_REFLOW"]/div[15]/div/div[2]/div/div/div[1]/div/div/div/div[1]/div[2]'
+                    '//*[@id="BODY_BLOCK_JQUERY_REFLOW"]/div[15]/div/div[2]/div/div/div[1]/div/div/div/div[2]/div[2]'
                 )
         else:
-            print("No description")
-            rest_data.append("No description")
+            desc = get_element(By.CLASS_NAME, "epsEZ")
+            if desc:
+                rest_data.append(desc.text)
+            else:
+                print("No description")
+                rest_data.append("No description")
             get_tags(
-                '//*[@id="component_43"]/div/div/div/div[2]/div/div[1]/div[1]/div[2]'
+                '//*[@id="component_43"]/div/div/div/div[2]/div/div[3]/div[1]/div[2]'
             )
 
         time.sleep(1)
