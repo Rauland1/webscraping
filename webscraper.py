@@ -52,7 +52,6 @@ def get_tags(xpath):
 
 def get_images():
     try:
-        photo_links = []
 
         large_photo_div = driver.find_element_by_class_name("large_photo_wrapper")
         large_photo_div.find_element_by_class_name("basicImg").click()
@@ -62,13 +61,12 @@ def get_images():
             main_image_src = main_image.find_element_by_tag_name("img").get_attribute(
                 "src"
             )
-            photo_links.append(main_image_src)
+            rest_data.append(main_image_src)
             next = get_element(
                 By.XPATH,
                 '//*[@id="taplc_pv_resp_content_hero_0"]/div/div[1]/div[3]/div[2]',
             ).click()
             print(main_image_src)
-        rest_data.append(photo_links)
         close = get_element(
             By.XPATH, '//*[@id="BODY_BLOCK_JQUERY_REFLOW"]/span/div[2]'
         ).click()
